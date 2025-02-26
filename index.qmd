@@ -426,9 +426,9 @@ $$
 
 Med andre ord: 
 
-`Nul-hypotese`: de to overlevelsesfunktioner er **ens**. $H_{0}: S_{1}=S_{2}$
+- `Nul-hypotese` --- **Overlevelsesfunktionerne** for de forskellige grupper er ens. I en to-gruppesammenligning: $H_{0}: S_{1}=S_{2}$
 
-`Alternativ hypotese`: de to hypoteser er **forskellige**. $H_{1}: S_{1} \neq S_{2}$
+- `Alternativ hypotese` --- **Overlevelsesfunktionerne** er forskellige. Dvs. **mindst to** af dem er **forskellige**: $H_{1}: S_{1} \neq S_{2}$
 
 Ved flere grupper er logikken den samme. **Alle** overlevelsesfunktioner **er ens** eller **mindst to** overlevelsesfunktioner **er forskellige**
 
@@ -462,9 +462,9 @@ strat_plot[["plot"]] +
 
 ## Hvordan sammenligner vi? (2)
 
-- Teknisk er en log-rank test en "`large scale chi-squared test`", der estimerer en overordnet---global---sammenligning af to eller flere ***KM*** kurver. 
+- Teknisk er en log-rank test en "`large scale chi-squared test`", $\chi^{2}$-test, der estimerer en overordnet---global---sammenligning af to eller flere ***KM*** kurver. 
 
-- Det gør vi ved at udvide de forrige tabeller---dem med *tid*, *hændelse*, *risksæt*, *censureringer*, osv.---til også at inkludere `forventede antal hændelser`. Forventede hændelser, $e$, for hver gruppe, er givet ved:
+- Det gør vi ved at udvide de forrige tabeller---tabellerne med *tid*, *hændelse*, *risksæt*, *censureringer*, osv.---til også at inkludere `forventede antal hændelser`. Forventede hændelser, $e$, for hver gruppe, er givet ved:
 
 $$ 
 e_{1} = \left ( \frac{n_{1}}{n_{1}+n_{2}} \right ) \times \left ( d_{1}+d_{2} \right )
@@ -475,6 +475,9 @@ og
 $$ 
 e_{2} = \left ( \frac{n_{1}}{n_{1}+n_{2}} \right ) \times \left ( d_{1}+d_{2} \right )
 $$
+
+hvor $n_{1}$ og $n_{2}$ er antallet af individer i risiko i hver gruppe, og $d_{1}$​ og $d_{2}$​ er de observerede hændelser.
+
 Herfra kan vi udregne forskellen i observeret $O$ og forventet $E$, som: 
 
 $$
@@ -483,19 +486,19 @@ $$
 
 hvor $i\in1,2$. 
 
-Summen for de to grupper vil være det samme, bortset fra den ene har minus foran summen. 
+Summen for de to grupper er spejlvendte (det ene med et minus) på grund af, at den samlede afvigelse skal summeres til nul.
 
 ## Hvordan sammenligner vi? (3)
 
-Log-rank statistikken for to grupper (1, 2) er slutteligt givet ved: 
+Log-rank statistikken for to grupper $(1, 2)$ er slutteligt givet ved: 
 
 $$
-\frac{\left ( O_{1} - E_{1}\right )^{2} }{\text{Var} \left (  O_{1} - E_{1} \right ) }
+\chi^{2} = \frac{\left ( O_{1} - E_{1}\right )^{2} }{\text{Var} \left (  O_{1} - E_{1} \right ) }
 $$
 eller
 
 $$
-\frac{\left ( O_{2} - E_{2}\right )^{2} }{\text{Var} \left (  O_{2} - E_{2} \right ) }
+\chi^{2} = \frac{\left ( O_{2} - E_{2}\right )^{2} }{\text{Var} \left (  O_{2} - E_{2} \right ) }
 $$
 
 P-værdien udleder vi fra $\chi^{2}$ fordelingen på klassisk vis. **Dette lader vi selvfølgelig computeren gøre, og printes ofte i bunden eller toppen af outputtet, afhængigt af kode-sprog**. 
@@ -504,7 +507,7 @@ P-værdien udleder vi fra $\chi^{2}$ fordelingen på klassisk vis. **Dette lader
 
 Alternative til `log-rank` er `Wilcoxon`, `Tarone-Ware`, `Peto`, og `Flemington-Harrington` tests.  
 
-Disse er alle variationer af log-rank testen med har forskellige vægte, der hhv. vægter tidlige og sene hændelser i forløbet. God praksis er at vælge en test *a priori* baseret på forventninger om dataen og fænoment. Disse forventninger kan trykprøves ved også at lave de alternative tests. Ofte vil de andre test have samme signifikans-niveau. 
+Disse er alle variationer af log-rank testen med har forskellige vægte, der hhv. lægge større vægt på tidlige eller sene hændelser i forløbet. God praksis er at vælge en test *a priori* baseret på forventninger om dataen og fænoment. Disse forventninger kan trykprøves ved også at lave de alternative tests. Ofte vil de andre test have samme signifikans-niveau. 
 
 ## Hvordan sammenligner vi? (5)
 
