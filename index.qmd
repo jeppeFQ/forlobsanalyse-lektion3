@@ -1,5 +1,5 @@
 ---
-title: "Event History Analysis: ikke-parametriske metoder (***K***aplan ***M***eier overlevelsestabeller)"
+title: "Event History Analysis: ikke-parametriske metoder (***K***aplan ***M***eier)"
 encoding: "UTF-8"
 execute:
   echo: false
@@ -72,11 +72,11 @@ library(latex2exp)
 
 ## Beskrivende statistik 
 
-#### `Overlevelse` som funktion af tiden udtrykkes som 
+#### `Overlevelse` som funktion af tiden udtrykkes som: 
 
 $$ S(t) = Pr(T > t)$$
 
-#### `Hazard-raten` udtrykkes som 
+#### `Hazard-raten` udtrykkes som: 
 
 $$ h(t) $$ 
 
@@ -87,17 +87,19 @@ da det er en rate og ikke en sandsynlighed.
 
 <br/>
 
-#### `Median leveltid` udtrykkes som 
+#### `Median leveltid` udtrykkes som: 
 
 $$ S(t) = 0,5 $$
 
-## Overlevelse er et udtryk for ... 
+## `Overlevelse` er et udtryk for ... 
 
-sandsynligheden for at **tiden** fra starten af forløbet indtil hændelsen er større end $t$. 
+sandsynligheden for, at den **tid**, der går fra start af forløbet til hændelsen, **overstiger** et givet tidspunkt $t$. Det vil sige, sandsynligheden for at hændelsen endnu **ikke** er indtrådt ved $t$.
 
 $$ P \left (  \left \{ T > t \right \} \right ) $$
 
-Denne sandsynlighed kommer til udtryk som (integralet af) en sandsynlighedsfunktion.
+$T$ er en stokastisk variabel, der repræsenterer **tiden til hændelsen**.
+
+Denne sandsynlighed er givet som integralet under den tilhørende sandsynlighedstæthedsfunktion (**pdf**), $f(u)$, for alle tider $u$ større end $t$:
 
 $$
 S(t) = P(\{T>t\}) = \int_{t}^{\infty} f(t)dt 
@@ -105,22 +107,24 @@ $$
 
 ## Hazard-raten er et udtryk for ... 
 
-sandsynligheden for at en begivenhed finder sted i et defineret tidsinterval, **betinget** af overlevelse op til det tidspunkt. Hazard-raten udtrykker dermed "styrken" af en begivenheds sandsynlighed, udtrykt som:
+sandsynligheden for, at en begivenhed indtræffer inden for et kort tidsinterval, **betinget af**, at "enheden" har **overlevet** indtil starten af dette **interval**. Med andre ord, det er et udtryk for den den øjeblikkelige "styrke" eller risiko for hændelsen, udtrykt som:
 
 $$ h(t) = \frac{f(t)}{\hat{S}(t)} $$
 
-Hvor $f(t)$ er sandsynlighedsfunktion. 
+hvor $f(t)$ er sandsynlighedstætheden (**pdf**) for **hændelsestiden**, og $S^(t)$ er **overlevelsesfunktionen** (se forrige slide).
 
 ## Median leveltid er et udtryk for ... 
 
-den tidligste tid hvor halvdelen af populationen/sample oplever begivenheden. Vi er altså interesseret i tiden $t$ (den afhængige variabel i overlevelsesanalysen) når: 
+den **tidligste tid**, hvor **halvdelen** af populationen eller samplet har oplevet **begivenheden**. Det vil sige, at vi finder $t$ (den afhængige variabel i overlevelsesanalysen), hvor: 
 
 $$ \hat{S}(t) = 0,5$$
+
+Denne værdi angiver det **punkt**, hvor $50\%$ af enhederne har oplevet hændelsen og $50\%$ fortsat er "overlevende".
 
 <br/>
 
 ::: aside
-Median er foretrukket mål for centralitet over gennemsnittet fordi gennemsnittet vil være nedad-biased hvis dataen er højre-censureret. Særligt hvis et relativt højt antal er censurerede. 
+Medianen er ofte et foretrukket mål for central tendens i overlevelsesanalyser, fordi gennemsnittet kan blive nedad-biased, specielt når der er en betydelig andel af højre-censurerede observationer. 
 :::
 
 
@@ -137,9 +141,29 @@ Median er foretrukket mål for centralitet over gennemsnittet fordi gennemsnitte
 
 df <- read_csv("flytte.csv")
 
-fit <- survfit(Surv(dur, status) ~ 1, data = df)
+fit <- survfit2(Surv(dur, status) ~ 1, data = df)
 
 median_over_tid <- 82
+
+median_plot <- 
+  ggsurvplot(fit, data = df, 
+           title = "Overlevelseskurve ('flytte.csv' data fra Moodle)",
+           palette = "#da1f66",
+           xlab = TeX("Tid ($t$)"),
+           ylab = TeX("$\\hat{S}(t)$"),
+           linetype = "solid",
+           surv.median.line = "hv",
+           pval = FALSE,
+           risk.table = FALSE)
+
+plt <-
+  median_plot[["plot"]] +
+  annotate("text", x = 0, y = 0.2, 
+           label = paste(" Median overlevelsestid:\n", round(median_over_tid, 2), "uger"), 
+           color = "#003fa3", hjust = 0, vjust = -0.5) +
+  guides(color = FALSE,
+         fill = FALSE) + 
+  theme_minimal()
 
 ```
 :::
@@ -163,7 +187,7 @@ median_plot <-
 
 median_plot[["plot"]] +
   annotate("text", x = 0, y = 0.2, 
-           label = paste(" Median\n overlevelsestid:\n", round(median_over_tid, 2), "uger"), 
+           label = paste(" Median overlevelsestid:\n", round(median_over_tid, 2), "uger"), 
            color = "#003fa3", hjust = 0, vjust = -0.5) +
   guides(color = FALSE,
          fill = FALSE) + 
@@ -174,65 +198,109 @@ median_plot[["plot"]] +
 <!--  ------------------------------------------->
 :::
 
-## Det vi skal huske er: 
+## Det vi skal huske er: (1)
 
-::: {.incremental}
+1. $S(t)$ er et mål for **overlevelse som en funktion af tiden**. Med andre ord, hvor længe man bliver i en pågældende position. Funktionen beskriver altså hvor stor en andel af populationen der stadig ikke har oplevet hændelsen ved tiden $t$. Funktionen kan ses som et **produkt af de betingede overlevelsessandsynligheder i hvert enkelt tidsinterval** (overlevelsessandsynligheden i alle de foregående tider ganget sammen). ***Fortæller noget om den samlede udvikling i "overlevelseschancen" over tid***.
 
-1. $S(t)$ er et mål for overlevelse som en funktion af tiden. Med andre ord, hvor længe man bliver i en pågældende position, bestemt som overlevelsessandsynligheden i alle de foregående tider ganget sammen. ***Fortæller noget om den samlede udvikling***.
+## Det vi skal huske er: (2)
 
-2. $h(t)$ fortæller noget om forekomsten af hændelser --- forudsat personen har "overlevet" frem til tidsintervallet --- samt hvordan det udvikler sig over tid. ***Fortæller noget om udviklingen i de enkelte tidsintervaller***.
+2. $h(t)$ fortæller noget om forekomsten af hændelser --- forudsat personen har "overlevet" frem til tidsintervallet --- samt hvordan det udvikler sig over tid. Med andre ord, funktionen udtrykker den øjeblikkelige risiko for, at hændelsen indtræffer i et **kort tidsinterval** omkring tidspunktet $t$, forudsat at hændelsen endnu ikke har fundet sted før $t$. Dette betyder, at $h(t)$ beskriver "styrken" af hændelsesrisikoen på netop dét tidspunkt og beskriver hvordan risikoen udvikler sig i hvert enkelt **tidsinterval**. ***Fortæller noget om udviklingen i de enkelte tidsintervaller***.
 
-3. $S(t) = 0,5$ fortæller noget om, hvornår halvdelen af sample/population ikke længere er under risiko for at opleve hændelsen. ***Fortæller noget om et enkelt punkt på kurven***.
+## Det vi skal huske er: (3)
 
-
-:::
+3. $S(t) = 0,5$, *median overlevelstiden*, fortæller hvornår halvdelen af sample/population har oplevet hændelsen (og omvendt ikke længere er under risiko for at opleve hændelsen). Altså, år overlevelsesfunktionen når værdien $0,5$. Dette punkt er et mål for, hvornår begivenheden **typisk indtræffer**. ***Fortæller noget om ét enkelt punkt på kurven***.
 
 # Kaplan-Meier estimation 
 
-## Kaplan-Meier (1)
+## Kaplan-Meier (1.1)
 
 Med eksemplet fra øvelsen: 
 
-`KM` er en **non-parametric** metode til at estimere risikoen (sandsynligheden) for et udfald efter et givent tidspunkt baseret på de observerede "overlevelses"-tider (`dur`) i population (`df`) --- i.e., der er ingen *a priori* antagelser om den underliggende fordeling af overlevelsestider):
+Kaplan-Meier-metoden (`KM`), er en **non-parametrisk** metode. Det betyder, at metoden estimerer **overlevelsessandsynligheden** uden at lave forudgående antagelser om, hvordan de **underliggende overlevelsestider er fordelt**. Metoden estimerer den **kumulative overlevelsesfunktion** baseret på de observerede "overlevelses"-tider (her betegnet som `dur`) i populationen (`df`).
 
 $$
 \hat{S}(t) = \prod_{i: t_i < t} \left(1 - \frac{d_j}{n_j}\right)
 $$
 
-hvor, $\hat{S}(t)$, **overlevelsesfuntionen**, er den estimerede sandsynlighed for overlevelse ved tid $t$. $t_{j}$ er observede tidspunkter for begivenheden (eng.: *failure times*). $d_{j}$ er antallet af begivenheder ved tid $t_{j}$. $n_{j}$ er antallet af individer der ikke har oplevet begivenhed eller er blevet censureret før tid $t_{j}$.
+::: {style="font-size: 75%;"}
 
-Med andre ord, vi multiplicere overlevelsessandsynlighederne over alle diskrete tidsintervaller (her, *uger*) hvor flyt finder sted. For hvert diskrete tidspunkt, $t_{j}$, estimeres overlevelsessandsynligheden som produktet af overlevelsessandsynlighederne op til det tidspunkt, justeret for antallet af observerede events, $d_{j}$, og antallet af personer i risiko for flyt, $n_{j}$, op til det tidspunkt.
+hvor, 
 
-Det primære "bidrag" med denne metode er at al information frem til censurering anvendes, fremfor at droppe de individer/observationer, der er censureret på et senere tidspunkt; det står delvist i kontrast til typiske tilgange i klassisk regressionsanalyse.   
+- $\hat{S}(t)$, **overlevelsesfuntionen**, er den estimerede sandsynlighed for, at en person stadig "overlever" (ikke har oplevet hændelsen) ved tid $t$.
+- $d_{j}$ er antallet af observerede hændelser (fx flyt) ved tidspunkt $t_{j}$​.
+- $t_{j}$ er observede tidspunkter for begivenheden (eng.: *failure times*). 
+- $n_{j}$ er antallet af individer, der er i risiko (altså endnu ikke har oplevet hændelsen eller er censureret) lige før tidspunkt $t_{j}$.
+
+:::
 
 <br/>
 
+## Kaplan-Meier (1.2)
 
-## Kaplan-Meier (2)
+Kaplan-Meier-metoden (`KM`), er en **non-parametrisk** metode. Det betyder, at metoden estimerer **overlevelsessandsynligheden** uden at lave forudgående antagelser om, hvordan de **underliggende overlevelsestider er fordelt**. Metoden estimerer den **kumulative overlevelsesfunktion** baseret på de observerede "overlevelses"-tider (her betegnet som `dur`) i populationen (`df`).
 
-Altså,
+$$
+\hat{S}(t) = \prod_{i: t_i < t} \left(1 - \frac{d_j}{n_j}\right)
+$$
 
-$d_{j}$ er antallet af hændelser i det diskrete tidsinterval. 
+Med andre ord, vi multiplicere overlevelsessandsynlighederne for hvert diskret tidsinterval --- *uger* --- hvor flyt finder sted. For hvert diskrete tidspunkt, $t_{j}$, estimeres overlevelsessandsynligheden som produktet af overlevelsessandsynlighederne op til det tidspunkt, ud fra forholdet mellem antallet af hændelser, $d_{j}$, og antallet af personer i risiko op til det tidspunkt, $n_{j}$.
 
-$n_{j}$ er antallet af person i `risikosættet`. Dvs. antallet af personer, der ikke har oplevet **hændelsen** *eller* blevet **censureret** op til tid $j$. Det vil sige at $S_{t}$ er udledt af `risikosættet`: ofte refereret til som $R(t)$. 
+<br/>
 
-$1 - \frac{d_j}{n_j}$ er sandsynlighed for overlevelse, *betinget* af overlevelse frem til $j$.
+## Kaplan-Meier (1.3)
 
-Med $\prod_{i: t_i < t}$ ganger vi overlevelsessandsynligheder frem til det pågældende tidspunkt, $j$. 
+Kaplan-Meier-metoden (`KM`), er en **non-parametrisk** metode. Det betyder, at metoden estimerer **overlevelsessandsynligheden** uden at lave forudgående antagelser om, hvordan de **underliggende overlevelsestider er fordelt**. Metoden estimerer den **kumulative overlevelsesfunktion** baseret på de observerede "overlevelses"-tider (her betegnet som `dur`) i populationen (`df`).
 
-For eksempel: 
+$$
+\hat{S}(t) = \prod_{i: t_i < t} \left(1 - \frac{d_j}{n_j}\right)
+$$
 
-|Tid|`Risikosæt` $n_{i}$|`Hændelser` $d_{j}$|$n_{j}-d_{j}$|$\frac{n_{j}-d_{j}}{n_{j}}$|$\hat{S}(t_{j})$|
+Det særlige ved denne metode er, at den **udnytter al information frem til et eventuelt censoreringspunkt**, fremfor at droppe de individer/observationer, der er **censureret** på et senere tidspunkt. Det vil sige, at selvom nogle individer ikke observeres indtil hændelsen (i.e., de censureres), indgår de stadig i beregningen, indtil det tidspunkt de censureres. Dette står i kontrast til nogle klassiske regressionsmetoder, hvor censurerede observationer ofte udelades.
+
+<br/>
+
+## Kaplan-Meier (2.1)   
+
+Én gang til,
+
+- $d_{j}$ er antallet af hændelser i det diskrete tidsinterval. 
+
+- $n_{j}$ er antallet af person i `risikosættet`. Dvs. antallet af personer, der ikke har oplevet **hændelsen** *eller* blevet **censureret** op til tid $j$. Det vil sige at $S(t)$ er udledt af `risikosættet`: ofte refereret til som $R(t)$. 
+
+- $1 - \frac{d_j}{n_j}$ er sandsynlighed for overlevelse, *betinget* af overlevelse frem til $j$.
+
+Som angivet ved $\prod_{i: t_i < t}$ ganger vi overlevelsessandsynligheder frem til det pågældende tidspunkt, $j$. 
+
+## Kaplan-Meier (2.2)   
+
+Som angivet ved $\prod_{i: t_i < t}$ ganger vi overlevelsessandsynligheder frem til det pågældende tidspunkt, $j$. 
+
+::: {style="font-size: 70%;"}
+
+|`Tid`, $t$ |`Risikosæt` $n_{i}$|`Hændelser` $d_{j}$|$n_{j}-d_{j}$|$\frac{n_{j}-d_{j}}{n_{j}}$|$\hat{S}(t_{j})$|
 |---|:-----------------:|:-----------------:|:-----------:|:---|:--------------|
-|0|77  |0 |0 |1                          |$\hat{S}(t_{j})=1$   |
-|1|77  |4 |73|$1 \times \frac{73}{77}$   |$\hat{S}(t_{j})=0,95$|
-|2|73  |10|63|$0,95 \times \frac{63}{73}$|$\hat{S}(t_{j})=0,82$|
-|3|73  |63|14|$0,82 \times \frac{49}{63}$|$\hat{S}(t_{j})=0,64$|
-|4|73  |49|8 |$0,64 \times \frac{41}{49}$|$\hat{S}(t_{j})=0,53$|
-|5|73  |41|6 |$0,53 \times \frac{35}{41}$|$\hat{S}(t_{j})=0,45$|
-|$t_{j}$|... |...|... |...|$\hat{S}(t_{j})=0$|
+|0|77  |0 |0 |1                          |$\hat{S}(t_{0})=1$   |
+|1|77  |4 |73|$1 \times \frac{73}{77}$   |$\hat{S}(t_{1})=0,95$|
+|2|73  |10|63|$0,95 \times \frac{63}{73}$|$\hat{S}(t_{2})=0,82$|
+|3|63  |14|49|$0,82 \times \frac{49}{63}$|$\hat{S}(t_{3})=0,64$|
+|4|49  |8|41 |$0,64 \times \frac{41}{49}$|$\hat{S}(t_{4})=0,53$|
+|5|41  |6|35 |$0,53 \times \frac{35}{41}$|$\hat{S}(t_{5})=0,45$|
+|$j$|... |...|... |...|$\hat{S}(t_{j})=0$|
 
 : Regneeksempel med de økonomistuderende i "flyttedataen"
+
+$\hat{S}(t)$ vil **altid** være faldende eller konstant. Aldrig stigende. 
+
+Kaplan-Meier kaldes også ofte *the product-limit estimator*, fordi vi beregner overlevelsesfunktionen som et **produkt af betingede overlevelsessandsynligheder**.
+:::
+
+<br/>
+
+## Kaplan-Meier (2.3)   
+
+$$ 
+\hat{S}(3) = \frac{73}{77} \times \frac{63}{73} \times \frac{49}{63} = 0,64
+$$
 
 <br/>
 
@@ -240,47 +308,48 @@ $$
 \hat{S}(4) = \frac{73}{77} \times \frac{63}{73} \times \frac{49}{63} \times \frac{41}{49} = 0,53
 $$
 
-$\hat{S}(t)$ vil **altid** være stigende eller konstant. Aldrig faldende. 
+<br/>
 
-## Kaplan-Meier (3)
+Altså, `median overlevelsestiden` er mellem tid 3 og 4.
 
-Alternativt kan ***KM*** estimeres som: 
-
-$$
-\hat{S} (t_\left({i}\right)) = \hat{S} (t_\left({i-1}\right)) \times P \left ( T > t  | T \geq t  \right) 
-$$
-
-Hvilket udtrykker sandsynligheden for overlevelse indtil tidspunkt $t_\left({j-1}\right)$ gange den betingede sandsynlighed for overlevelse for til $t_\left({j}\right)$. For eksempel, ved $t=4$: 
-
-$\hat{S} (t_\left({4-1}\right)) = \frac{73}{77} \times \frac{63}{73} \times \frac{49}{63}$ 
-
-og
-
-$P \left ( T > 4  | T \geq 4  \right) = \frac{35}{41}$
-
-::: aside
-Uanset hvordan det udregnes er det "smarte" ved ***KM*** at estimeringen kan håndtere højre-censurerede observationer. 
-
-***KM*** kaldes også til tider *the product-limit estimation*. 
-
-:::
 
 # Kaplan-Meier: Stratificering 
 
-## Kaplan-Meier (4)
+## Kaplan-Meier (3.1)
 
 ***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en covariate (uafhængig variabel) i stedet for `1` (intercept-only model). 
 
+- `Stratificering`: Dataene opdeles baseret på en covariate (fx årgang eller bopælsområde), hvorefter der udregnes separate KM-kurver for hver gruppe. Disse kurver kan derefter **sammenlignes visuelt**, og en **log-rank test** kan anvendes til at afgøre, om **forskellene mellem kurverne** er signifikante.
+
+## Kaplan-Meier (3.2)
+
+***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en covariate (uafhængig variabel) i stedet for `1` (intercept-only model). 
 
 ::: columns
-<!--  ------------------------------------------->
+
 ::: {.column width="50%"}
 ### Kode
 
 ```{r}
 #| echo: true
 
-fit <- survfit(Surv(dur, status) ~ udd, data = df)
+fit <- survfit2(Surv(dur, status) ~ udd, data = df)
+
+strat_plot <- 
+  ggsurvplot(fit, data = df, 
+           title = "Overlevelseskurve ('flytte.csv' data fra Moodle)",
+           palette = c("#da1f66", "#003fa3"),
+           xlab = TeX("Tid ($t$)"),
+           ylab = TeX("$\\hat{S}(t)$"),
+           linetype = "solid",
+           surv.median.line = c("hv") ,
+           conf.int = TRUE,
+           pval = FALSE,
+           risk.table = FALSE)
+
+plt <- 
+  strat_plot[["plot"]] +
+  theme_minimal()
 
 ```
 :::
@@ -311,12 +380,20 @@ strat_plot[["plot"]] +
 
 :::
 
+## Kaplan-Meier (3.3)
+
+Når vi **stratificerer data**, estimerer vi en separat `KM`-kurve for hvert stratum. For et givet stratum $k$ er den estimerede overlevelsesfunktion defineret som:
+
+$$
+\hat{S}_k(t) = \prod_{j: t_j \le t} \left(1 - \frac{d_{j,k}}{n_{j,k}}\right)
+$$
+
 ## Kaplan-Meier (4) 
 
 ```{r}
 #| echo: true
 
-fit <- survfit(Surv(dur, status) ~ udd, data = df)
+fit <- survfit2(Surv(dur, status) ~ udd, data = df)
 
 fit
 ```
@@ -327,25 +404,25 @@ fit
 ```{r}
 #| echo: true
 
-fit <- survfit(Surv(dur, status) ~ udd, data = df)
+fit <- survfit2(Surv(dur, status) ~ udd, data = df)
 
 summary(fit)
 
 ```
 
-## Hvorfor sammenligne?
+## Hvorfor sammenligne? (1)
 
 - Har forskellige grupper forskellig overlevelse? 
 
-- Første skridt i undersøgelsen af ***hvorfor*** (i et `kausalt henseende`). 
-
-  - Dette kan dog ikke besvares med ***KM***, som vi vil vende tilbage til.
+- Første skridt i undersøgelsen af ***hvorfor*** (i et `kausalt henseende`). (...) Dette kan dog ikke besvares med ***KM***, som vi vil vende tilbage til.
 
 ## Hvorfor sammenligne? (2)
 
-Vi tester:
+Vi tester følgende `nul-hypotese`:
 
-$$H_{0}: S_{1}(t)=S_{2}(t)=\dots=S_{n}(t)$$
+$$
+H_{0}: S_{1}(t)=S_{2}(t)=\dots=S_{n}(t)
+$$
 
 Med andre ord: 
 
@@ -355,7 +432,7 @@ Med andre ord:
 
 Ved flere grupper er logikken den samme. **Alle** overlevelsesfunktioner **er ens** eller **mindst to** overlevelsesfunktioner **er forskellige**
 
-## Hvordan sammenligner vi?
+## Hvordan sammenligner vi? (1)
 
 Der er forskellige signifikanstests, men `log-rank` (Mantel-Haenszel) test er den mest anvendte. 
 
@@ -392,6 +469,7 @@ strat_plot[["plot"]] +
 $$ 
 e_{1} = \left ( \frac{n_{1}}{n_{1}+n_{2}} \right ) \times \left ( d_{1}+d_{2} \right )
 $$
+
 og 
 
 $$ 
@@ -428,7 +506,7 @@ Alternative til `log-rank` er `Wilcoxon`, `Tarone-Ware`, `Peto`, og `Flemington-
 
 Disse er alle variationer af log-rank testen med har forskellige vægte, der hhv. vægter tidlige og sene hændelser i forløbet. God praksis er at vælge en test *a priori* baseret på forventninger om dataen og fænoment. Disse forventninger kan trykprøves ved også at lave de alternative tests. Ofte vil de andre test have samme signifikans-niveau. 
 
-## Hvordan sammenligner vi? (4)
+## Hvordan sammenligner vi? (5)
 
 
 ```{r}
@@ -451,8 +529,6 @@ $$
 se Kleinbaun og Klein (2020, s. 71).
 
 :::
-
-
 
 # Overlevelsesdata og øvelse
 
@@ -479,10 +555,10 @@ load("First_child.rda")
 
 
 ```{r}
-#| echo: false
+#| echo: true
 #| eval: false
 
-load ("First_child.rda")
+load("First_child.rda")
 
 data <- 
   df %>% 
@@ -521,8 +597,6 @@ mean(First_child[["age"]], na.rm = TRUE)
 
 ```
 
-
-
 ## Øvelse
 
 ***I skal undersøge tiden indtil første fødte barn***. Dette eksempel fortsætter gennem forelæsningerne, således i kan bygge ovenpå hver øvelse. MEN, har i lyst til at arbejde med en anden problemstilling i finder interressant, eller evt.  matcher med jeres aktuelle projektarbejde, er i også velkomne til det. 
@@ -538,13 +612,18 @@ mean(First_child[["age"]], na.rm = TRUE)
 4. Test og visualiser om der er forskel mellem regioner (`region18`) i tiden indtil første fødte barn.
 
 ```{r}
+#| echo: true
+#| eval: false
+
 df <- haven::read_sas("//Volumes//Fileshares//mikrooekonometri-F25//Råfiler//pnr_sample.sas7bdat")
 
 ```
 
 
-
 ```{r}
+#| echo: false
+#| eval: false
+
 library(tidyverse)
 library(survival)
 
@@ -569,7 +648,9 @@ KM
 ```
 
 ```{r}
-# install.packages("ggsurvfit")
+#| echo: false
+#| eval: false
+
 library(ggsurvfit)
 library(latex2exp)
 
@@ -586,6 +667,9 @@ ggsurvfit(KM) +
 ```
 
 ```{r}
+#| echo: false
+#| eval: false
+
 KM <- survfit(Surv(tid, event) ~ region18, data = First_child)
 
 ggsurvfit(KM) + 
