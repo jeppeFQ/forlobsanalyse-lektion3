@@ -109,9 +109,9 @@ $$
 
 sandsynligheden for, at en begivenhed indtræffer inden for et kort tidsinterval, **betinget af**, at "enheden" har **overlevet** indtil starten af dette **interval**. Med andre ord, det er et udtryk for den den øjeblikkelige "styrke" eller risiko for hændelsen, udtrykt som:
 
-$$ h(t) = \frac{f(t)}{\hat{S}(t)} $$
+$$ h(t) = \frac{f(t)}{S(t)} $$
 
-hvor $f(t)$ er sandsynlighedstætheden (**pdf**) for **hændelsestiden**, og $S^(t)$ er **overlevelsesfunktionen** (se forrige slide).
+hvor $f(t)$ er sandsynlighedstætheden (**pdf**) for **hændelsestiden**, og $S(t)$ er **overlevelsesfunktionen** (se forrige slide).
 
 ## Median leveltid er et udtryk for ... 
 
@@ -317,13 +317,13 @@ Altså, `median overlevelsestiden` er mellem tid 3 og 4.
 
 ## Kaplan-Meier (3.1)
 
-***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en covariate (uafhængig variabel) i stedet for `1` (intercept-only model). 
+***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en uafhængig variabel i stedet for `1` (intercept-only model). 
 
 - `Stratificering`: Dataene opdeles baseret på en covariate (fx årgang eller bopælsområde), hvorefter der udregnes separate KM-kurver for hver gruppe. Disse kurver kan derefter **sammenlignes visuelt**, og en **log-rank test** kan anvendes til at afgøre, om **forskellene mellem kurverne** er signifikante.
 
 ## Kaplan-Meier (3.2)
 
-***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en covariate (uafhængig variabel) i stedet for `1` (intercept-only model). 
+***Et af de typiske formål med en KM estimation, er at sammeligne to overlevelseskurver.*** Vi gør dette ved at tilføje en uafhængig variabel i stedet for `1` (intercept-only model). 
 
 ::: columns
 
@@ -434,7 +434,9 @@ Ved flere grupper er logikken den samme. **Alle** overlevelsesfunktioner **er en
 
 ## Hvordan sammenligner vi? (1)
 
-Der er forskellige signifikanstests, men `log-rank` (Mantel-Haenszel) test er den mest anvendte. 
+- `Visuelt`.
+
+- `signifikanstests`: Der er forskellige tests, men `log-rank` (Mantel-Haenszel) test er den mest anvendte. 
 
 ```{r fig.width=7, fig.align="center"}
 #| echo: false
@@ -460,7 +462,7 @@ strat_plot[["plot"]] +
   
 ```
 
-## Hvordan sammenligner vi? (2)
+## Hvordan sammenligner vi? (2.1)
 
 - Teknisk er en log-rank test en "`large scale chi-squared test`", $\chi^{2}$-test, der estimerer en overordnet---global---sammenligning af to eller flere ***KM*** kurver. 
 
@@ -477,6 +479,8 @@ e_{2} = \left ( \frac{n_{1}}{n_{1}+n_{2}} \right ) \times \left ( d_{1}+d_{2} \r
 $$
 
 hvor $n_{1}$ og $n_{2}$ er antallet af individer i risiko i hver gruppe, og $d_{1}$​ og $d_{2}$​ er de observerede hændelser.
+
+## Hvordan sammenligner vi? (2.2)
 
 Herfra kan vi udregne forskellen i observeret $O$ og forventet $E$, som: 
 
@@ -545,8 +549,6 @@ load("First_child.rda")
 
 ```
 
-## `single-episode file` med fixed/`time-invariant` variable: 
-
 - `PNR` (individuel ID)
 - `aar` (året for hændelsen)
 - `ALDER` (alder på hændelsestidspunktet)
@@ -555,7 +557,7 @@ load("First_child.rda")
 - `region18` (bopælsregion da personen er 18 år)
 - `event` (1=hændelse, 0=uændret tilstand)
 
-
+## `single-episode file`, klargøring af fil: 
 
 ```{r}
 #| echo: true
